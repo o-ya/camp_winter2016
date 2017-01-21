@@ -639,4 +639,5 @@ dependencies: \
   ../../../addons/ofxFaceTracker/libs/FaceTracker/include/FaceTracker/PAW.h \
   ../../../addons/ofxFaceTracker/src/ExpressionClassifier.h \
   ../../../addons/ofxFaceTracker/src/Expression.h \
-  /Users/shinnosuke/dev/of_v0.9.8_osx_release/addons/ofxFaceTracker/src/ofxFaceTrackerThreaded.h
+  /Users/shinnosuke/dev/of_v0.9.8_osx_release/addons/ofxFaceTracker/src/ofxFaceTrackerThreaded.h \
+  /Users/shinnosuke/dev/of_v0.9.8_osx_release/apps/myApps/camp_winter/src/ParticleVec2.h

@@ -34,6 +34,10 @@ void ofApp::setup(){
    if( faces.size() != 0 ){
       loadFace( faces.getPath( currentFace ) );
    }
+   
+   particleMesh.setMode(OF_PRIMITIVE_POINTS);
+   heaerMesh.setMode(OF_PRIMITIVE_TRIANGLES);
+   
 }
 
 //--------------------------------------------------------------
@@ -55,8 +59,6 @@ void ofApp::update() {
          camMesh.draw();
          maskFbo.end();
          
-         
-         
          srcFbo.begin();
          ofClear(0, 255);
          src.bind();
@@ -70,7 +72,37 @@ void ofApp::update() {
                        maskFbo.getTextureReference() );
       }
    }
-}
+   
+   particleMesh.clear();
+   for( ParticleVec2* particle : _particles ){
+      particle->addForce(0.0,0.1);
+      particle->update();
+      particle->bounceOfWalls();
+      particleMesh.addColor( particle->getColor());
+      particleMesh.addVertex( ofVec3f(particle->getPosX(), particle->getPosY() ));
+      
+   }
+   
+   
+   // 唇開口の検出
+   mouseWidth = camTracker.getGesture( ofxFaceTracker::MOUTH_WIDTH );
+   mouseHeight = camTracker.getGesture( ofxFaceTracker::MOUTH_HEIGHT );
+   isOpenMouse = false;
+   if(mouseHeight / mouseWidth > 0.5){
+      isOpenMouse = true;
+      mouseTopPos = camTracker.getImagePoint( 61 );
+      mouseButtomPos = camTracker.getImagePoint( 64 );
+      mouseCenter = mouseTopPos + (mouseButtomPos - mouseTopPos)/2;
+   }
+   
+   // 右目のウィンクを検出
+   rightEyeOpenness = camTracker.getGesture(ofxFaceTracker::RIGHT_EYE_OPENNESS);
+   isrightEyeClose =false;
+   if (rightEyeOpenness < 0.1 )
+      isrightEyeClose = true;
+      
+   
+   }
 
 //--------------------------------------------------------------
 // 描画
@@ -86,11 +118,32 @@ void ofApp::draw() {
       cam.draw(0, 0);
    }
    
+   
    // 点の入力
    if(camTracker.getFound() && isFaceVert) {
+      glPointSize(2.0);
       ofSetLineWidth(1);
       camTracker.getImageMesh().drawVertices();
    }
+   
+   // 口の開き方で変化
+   if (isOpenMouse){
+      addParticle(mouseCenter.x, mouseCenter.y);
+   }
+   
+   // 右目のウィンクで変化
+   if (isrightEyeClose){
+      
+   }
+   
+   glPointSize(6.0);
+   particleMesh.draw();
+}
+
+
+void ofApp::exit(){
+   camTracker.waitForThread();
+   camTracker.stopThread();
 }
 
 //--------------------------------------------------------------
@@ -112,6 +165,7 @@ void ofApp::dragEvent(ofDragInfo dragInfo) {
    loadFace( dragInfo.files[0] );
 }
 
+
 //--------------------------------------------------------------
 //
 //--------------------------------------------------------------
@@ -126,6 +180,16 @@ void ofApp::keyPressed(int key){
       case 'd':
          isFaceVert = !isFaceVert;
          break;
+      case 'p':
+         addParticle(100,100);
+         break;
+         
+      case '1':
+         particleMesh.setMode(OF_PRIMITIVE_POINTS);
+         break;
+      case '2':
+         particleMesh.setMode(OF_PRIMITIVE_LINES);
+         break;
    }
    
    //
@@ -137,7 +201,22 @@ void ofApp::keyPressed(int key){
    }
 }
 
-void ofApp::exit(){
-   camTracker.waitForThread();
-   camTracker.stopThread();
+//--------------------------------------------------------------
+// パーティクル出現
+//--------------------------------------------------------------
+void ofApp::addParticle(int x, int y){
+   for( int i =0; i<10; i++){
+      if ( _particles.size() > _max_num )
+         _particles.erase( _particles.begin() );
+      
+      ParticleVec2* p = new ParticleVec2();
+      p->start(x, y);
+      _particles.push_back( move(p) );
+      
+   }
 }
+
+
+
+
+
